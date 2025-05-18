@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
+const { DateTime } = require("luxon");
 const Schema = mongoose.Schema;
 
 const BookInstanceSchema = new Schema({
-  book: { type: Schema.Types.ObjectId, ref: "Book", required: true }, // посилання на пов'язану книгу
+  book: { type: Schema.Types.ObjectId, ref: "Book", required: true }, 
   imprint: { type: String, required: true },
   status: {
     type: String,
@@ -13,11 +14,12 @@ const BookInstanceSchema = new Schema({
   due_back: { type: Date, default: Date.now },
 });
 
-// Віртуальне поле для URL екземпляра книги
 BookInstanceSchema.virtual("url").get(function () {
-  // Ми не використовуємо стрілочну функцію, оскільки нам знадобиться об'єкт this
   return `/catalog/bookinstance/${this._id}`;
 });
 
-// Експортуємо модель
+BookInstanceSchema.virtual("due_back_formatted").get(function () {
+  return DateTime.fromJSDate(this.due_back).setLocale("en").toLocaleString(DateTime.DATE_MED);
+});
+
 module.exports = mongoose.model("BookInstance", BookInstanceSchema);

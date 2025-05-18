@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { DateTime } = require("luxon");
 const Schema = mongoose.Schema;
 
 const AuthorSchema = new Schema({
@@ -8,11 +9,8 @@ const AuthorSchema = new Schema({
   date_of_death: { type: Date },
 });
 
-// Віртуальне поле для повного імені автора
 AuthorSchema.virtual("name").get(function () {
-  // Щоб уникнути помилок у випадках, коли автор не має ні прізвища, ні імені
-  // Ми хочемо переконатися, що ми обробляємо виняток, повертаючи порожній рядок для цього випадку
-  let fullname = "";
+   let fullname = "";
   if (this.first_name && this.family_name) {
     fullname = `${this.family_name}, ${this.first_name}`;
   }
@@ -20,11 +18,19 @@ AuthorSchema.virtual("name").get(function () {
   return fullname;
 });
 
-// Віртуальне поле для URL автора
-AuthorSchema.virtual("url").get(function () {
-  // Ми не використовуємо стрілочну функцію, оскільки нам знадобиться об'єкт this
-  return `/catalog/author/${this._id}`;
+AuthorSchema.virtual("lifespan").get(function () {
+  let birth = this.date_of_birth
+    ? DateTime.fromJSDate(this.date_of_birth).setLocale("en").toLocaleString(DateTime.DATE_MED)
+    : "";
+  let death = this.date_of_death
+    ? DateTime.fromJSDate(this.date_of_death).setLocale("en").toLocaleString(DateTime.DATE_MED)
+    : "";
+
+  return `${birth} - ${death}`;
 });
 
-// Експортуємо модель
+AuthorSchema.virtual("url").get(function () {
+    return `/catalog/author/${this._id}`;
+});
+
 module.exports = mongoose.model("Author", AuthorSchema);
