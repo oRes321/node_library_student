@@ -1,3 +1,8 @@
+const compression = require("compression");
+const helmet = require("helmet");
+const RateLimit = require("express-rate-limit");
+require("dotenv").config();
+
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
@@ -15,6 +20,21 @@ connectDB();
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
+
+app.use(compression());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+    },
+  })
+);
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 хвилина
+  max: 20,                 // максимум 20 запитів
+});
+app.use(limiter);
+
 
 app.use(logger("dev"));
 app.use(express.json());
